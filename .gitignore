@@ -1,0 +1,44 @@
+# Environment and sensitive configuration files
+.env
+src/main/resources/application-prod.conf
+config/*.conf
+!config/dev.conf
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Scala/Metals/IntelliJ
+.bsp/
+.metals/
+.bloop/
+.scala-build/
+project/target/
+project/project/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+.history/
+
+# Logs
+*.log
+logs/
+
+# Output directories
+output/
+reports/
+# Large data files (exceeds GitHub limit)
+data_onboarding/*.csv
+*.csv
