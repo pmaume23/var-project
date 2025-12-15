@@ -2,14 +2,30 @@
 
 # Run directly with java command (requires mvn compile first)
 
-# Compile if needed
-if [ ! -d "target/classes" ]; then
-    echo "Compiling project..."
-    mvn compile
+# Default main class (can be overridden via CLI or MAIN_CLASS env var)
+MAIN_CLASS="${MAIN_CLASS:-com.dq.pipeline.DQMain}"
+
+case "$1" in
+  varsvar|VarSvar)
+    MAIN_CLASS="com.var.pipeline.VarSvarMain"
+    shift
+    ;;
+  dqmain|DQMain)
+    MAIN_CLASS="com.dq.pipeline.DQMain"
+    shift
+    ;;
+esac
+
+# Compile if needed (or if chosen main class is missing)
+CLASS_FILE="target/classes/${MAIN_CLASS//./\/}.class"
+if [ ! -f "${CLASS_FILE}" ]; then
+  echo "Compiling project... (missing ${CLASS_FILE})"
+  mvn compile
 fi
 
+echo "Running application with main: ${MAIN_CLASS}"
+
 # Run with Java 17+ compatibility flags
-echo "Running application..."
 java \
   --add-opens=java.base/java.lang=ALL-UNNAMED \
   --add-opens=java.base/java.lang.invoke=ALL-UNNAMED \
@@ -24,4 +40,4 @@ java \
   --add-opens=java.base/sun.util.calendar=ALL-UNNAMED \
   --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED \
   -cp "target/classes:$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout)" \
-  com.dq.pipeline.DQMain "$@"
+  "${MAIN_CLASS}" "$@"
