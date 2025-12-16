@@ -16,18 +16,6 @@ object VarSvarMain {
 
         val varSvarNode = new VarSvarNode()
 
-        // Display rolling time-series VaR
-        val rollingVarDF = varSvarNode.rollingVarDF
-        logger.info("=== Rolling VaR Time Series (252-day window) ===")
-        rollingVarDF.show(20, truncate = false)
-        logger.info(s"Total time periods with rolling VaR: ${rollingVarDF.count()}")
-
-        // Display rolling stressed VaR
-        val rollingStressedVarDF = varSvarNode.rollingStressedVarDF
-        logger.info("=== Rolling Stressed VaR (2008, 2020 crisis periods) ===")
-        rollingStressedVarDF.show(20, truncate = false)
-        logger.info(s"Total time periods with rolling stressed VaR: ${rollingStressedVarDF.count()}")
-
         //Display Combined Var And SVar
         val combinedVarSVarDF = varSvarNode.combinedVarSVarDF
         logger.info("=== Combined VaR and SVar DataFrame ===")
