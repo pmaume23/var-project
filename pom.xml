@@ -199,6 +199,32 @@
                 </configuration>
             </plugin>
 
+            <!-- Maven Surefire Plugin for Java module compatibility -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens=java.base/java.io=ALL-UNNAMED
+                        --add-opens=java.base/java.net=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-opens=java.base/sun.security.action=ALL-UNNAMED
+                        --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+                        --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-exports=java.base/sun.security.action=ALL-UNNAMED
+                        --add-exports=java.base/sun.security.util=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+
             <!-- ScalaTest Plugin -->
             <plugin>
                 <groupId>org.scalatest</groupId>
@@ -208,24 +234,23 @@
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
                     <filereports>TestSuiteReport.txt</filereports>
-                    <forkMode>once</forkMode>
-                    <jvmArgs>
-                        <jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.io=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.net=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.nio=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.util=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.util.concurrent=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/sun.security.action=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-opens=java.base/sun.util.calendar=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-exports=java.base/sun.security.action=ALL-UNNAMED</jvmArg>
-                        <jvmArg>--add-exports=java.base/sun.security.util=ALL-UNNAMED</jvmArg>
-                    </jvmArgs>
+                    <argLine>
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens=java.base/java.io=ALL-UNNAMED
+                        --add-opens=java.base/java.net=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-opens=java.base/sun.security.action=ALL-UNNAMED
+                        --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+                        --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-exports=java.base/sun.security.action=ALL-UNNAMED
+                        --add-exports=java.base/sun.security.util=ALL-UNNAMED
+                    </argLine>
                 </configuration>
                 <executions>
                     <execution>
