@@ -177,6 +177,109 @@ JAVA_HOME=/usr/libexec/java_home -v 17 mvn clean package
 ./run-standalone.sh varsvar
 ```
 
+### Keeping the Spark UI available after the job finishes (debugging)
+
+If you want to inspect the Spark Web UI after the job finishes, set the `KEEP_UI_ALIVE` environment variable to `true` when you run the application. The program will wait for you to press ENTER before exiting, which keeps the Spark driver (and therefore the UI) running.
+
+Example (use your DB env vars as needed):
+
+```bash
+KEEP_UI_ALIVE=true \
+OUTPUT_PATH=file:///tmp/varsvar_test \
+DB_HOST=127.0.0.1 DB_PORT=5432 DB_NAME=sp500stocks DB_USER=varuser DB_PASS='varuserpass@01' \
+./run-standalone.sh varsvar
+```
+
+After the run completes you'll see a message like:
+
+```
+KEEP_UI_ALIVE=true: keeping application alive so Spark UI stays up. Press ENTER to stop.
+```
+
+Leave the terminal open and browse the Spark UI (default port 4040). When you're finished inspecting, press ENTER in the terminal to let the application exit and the UI shut down.
+
+Tip: For long-term access to completed application UIs without keeping the driver alive, consider enabling Spark event logging and running the Spark History Server (see section below).
+
+### Initializing local Hadoop (HDFS)
+
+To start the HDFS NameNode and DataNode daemons (Homebrew-installed Hadoop) and verify they're running, run these commands in your terminal:
+
+```bash
+hdfs --daemon start namenode
+hdfs --daemon start datanode
+jps
+```
+
+`jps` should show `NameNode` and `DataNode` among the Java processes when they have started successfully.
+
+### Initializing the PostgreSQL database (sp500stocks)
+
+This project expects a PostgreSQL database named `sp500stocks` and a database user (role) used by the app (example: `varuser`). The steps below create the role, set its password, create the database, and optionally create/import the `sp500_ratios_price` table used by the VaR job.
+
+1. Start the PostgreSQL service (Homebrew example):
+
+```bash
+brew services start postgresql@14
+# or, if you installed a different version, adjust the service name
+```
+
+2. Create the role (or update its password) and create the database. Run these as a superuser (on many macOS installs your current user is a superuser for local Postgres):
+
+```bash
+# replace the password below with a secure one or keep the example used in this repo
+DB_PASS='xxxxxxxxx' //Get it from env variable or set your own
+DB_USER='varuser'
+DB_NAME='sp500stocks'
+
+# Create or update the role and password (idempotent)
+psql -h 127.0.0.1 -p 5432 -U $(whoami) -d postgres -c "DO $$BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${DB_USER}') THEN CREATE ROLE ${DB_USER} WITH LOGIN PASSWORD '${DB_PASS}'; ELSE ALTER ROLE ${DB_USER} WITH PASSWORD '${DB_PASS}'; END IF; END$$;"
+
+# Create the database owned by the role (no-op if it already exists)
+psql -h 127.0.0.1 -p 5432 -U $(whoami) -d postgres -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};" || true
+```
+
+3. Verify you can connect as the project user and list tables:
+
+```bash
+PGPASSWORD='${DB_PASS}' psql -h 127.0.0.1 -p 5432 -U ${DB_USER} -d ${DB_NAME} -c "\dt"
+```
+
+4. (Optional) Create the `sp500_ratios_price` table and import the CSV present in the repository (`data_onboarding/sp500_ratios_price_data.csv`). Adjust the column list/types to match the CSV and your app expectations.
+
+```bash
+PGPASSWORD='${DB_PASS}' psql -h 127.0.0.1 -p 5432 -U ${DB_USER} -d ${DB_NAME} -c "CREATE TABLE IF NOT EXISTS public.sp500_ratios_price (
+  id serial PRIMARY KEY,
+  ticker varchar(64) NOT NULL,
+  dt date NOT NULL,
+  price numeric(20,6),
+  ratio numeric(20,8)
+);"
+
+# Import CSV from the project (run from the repo root or give absolute path)
+PGPASSWORD='${DB_PASS}' psql -h 127.0.0.1 -p 5432 -U ${DB_USER} -d ${DB_NAME} -c "\copy public.sp500_ratios_price(ticker,dt,price,ratio) FROM 'data_onboarding/sp500_ratios_price_data.csv' CSV HEADER;"
+
+# Verify rows
+PGPASSWORD='${DB_PASS}' psql -h 127.0.0.1 -p 5432 -U ${DB_USER} -d ${DB_NAME} -c "SELECT count(*) FROM public.sp500_ratios_price;"
+```
+
+5. Alternative: use the Python onboarding script which loads data and writes into the DB. Set the environment variables and run it from the project root:
+
+```bash
+export DB_HOST=127.0.0.1
+export DB_PORT=5432
+export DB_NAME=sp500stocks
+export DB_USER=varuser
+export DB_PASS='varuserpass@01'
+python3 data_onboarding/onboard_data.py
+```
+
+Notes and troubleshooting:
+- If you get `role "postgres" does not exist` when using `-U postgres`, use your local OS user (often `$(whoami)`) as the superuser, or use the account that already has superuser privileges.
+- If authentication fails for the project user, use the `ALTER ROLE` command shown above to reset the password.
+- If TCP connections fail, check `pg_hba.conf` to ensure local TCP connections allow `md5`/`trust` as appropriate for your environment, then restart Postgres: `brew services restart postgresql@14`.
+
+This will prepare the `sp500stocks` DB so the VaR/SVaR job can load `sp500_ratios_price` and run successfully.
+
 ### Method 3: Direct Maven Execution
 ```bash
 mvn exec:java -Dexec.mainClass="DQMain"
@@ -341,6 +444,12 @@ Install required packages:
 ```bash
 pip install pandas numpy yfinance
 ```
+
+### PostgreSQL Connection Issues
+- Ensure the PostgreSQL service is running.
+- Verify the database user/role and password are correct.
+- Check `pg_hba.conf` for host-based authentication settings.
+- If using Docker, ensure the container is running and ports are mapped.
 
 ## Performance Considerations
 
